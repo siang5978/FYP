@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block content %}
+<div x-data="{ showModal: false, selectedAchievement: null }">
+  <div class="jumbotron">
+    <div class="container">
+      <h1 class="display-4">My Achievements</h1>
+    </div>
+  </div>
+
+  <div class="container mt-4">
+    <div class="row g-4">
+      {% for a in achievements %}
+      <div class="col-sm-6 col-md-4 col-lg-3">
+        <div 
+          class="card achievement-card {% if a.id in earned %}unlocked{% else %}locked{% endif %} shadow-sm text-center position-relative overflow-hidden"
+          @click="selectedAchievement={{ a.id }}; showModal = true"
+        >
+          <div class="card-body d-flex flex-column justify-content-center align-items-center py-4">
+            <h5 class="card-title fw-bold">{{ a.name }}</h5>
+            {% set prog = progress[a.id] if progress and a.id in progress else {'completed':0,'total':0} %}
+            {% if a.id in earned %}
+            <p class="card-text">{{ a.description }}</p>
+            <span class="badge bg-success position-absolute top-0 end-0 m-2">Unlocked</span>
+            {% else %}
+            <p class="card-text text-muted fst-italic">Locked ({{ prog.completed }}/{{ prog.total }})</p>
+            <span class="badge bg-secondary position-absolute top-0 end-0 m-2">Locked</span>
+            {% endif %}
+          </div>
+          {% if not a.id in earned and prog.total > 0 %}
+          <div class="progress w-75 mx-auto mb-2" style="height:6px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ (prog.completed/prog.total)*100 }}%;" aria-valuenow="{{ prog.completed }}" aria-valuemin="0" aria-valuemax="{{ prog.total }}"></div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div 
+    x-show="showModal" 
+    class="achievement-overlay" 
+    @click="showModal=false"
+    x-transition.opacity
+    style="display: none;"
+  >
+    <div class="modal-card" @click.stop>
+      <button @click="showModal=false" class="btn-close">&times;</button>
+      {% for a in achievements %}
+      <template x-if="selectedAchievement === {{ a.id }}">
+        <div>
+          <h4 class="fw-bold">{{ a.name }}</h4>
+          {% set prog = progress[a.id] if progress and a.id in progress else {'completed':0,'total':0} %}
+          {% if a.id in earned %}
+          <p>{{ a.description }}</p>
+          <span class="badge bg-success">Unlocked</span>
+          {% else %}
+          <p class="text-muted fst-italic">Locked ({{ prog.completed }}/{{ prog.total }})</p>
+          <span class="badge bg-secondary">Locked</span>
+          {% if prog.total > 0 %}
+          <div class="progress mt-2">
+            <div class="progress-bar" role="progressbar" style="width: {{ (prog.completed/prog.total)*100 }}%;" aria-valuenow="{{ prog.completed }}" aria-valuemin="0" aria-valuemax="{{ prog.total }}"></div>
+          </div>
+          {% endif %}
+          {% endif %}
+        </div>
+      </template>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>
+.achievement-card {
+  border: none;
+  border-radius: 15px;
+  transition: transform 0.3s, box-shadow 0.3s;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.achievement-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+.card.unlocked { background: linear-gradient(145deg, #d4edda, #c8f0c8); color: #155724; }
+.card.locked { background: linear-gradient(145deg, #f8d7da, #f0c8c8); color: #721c24; }
+
+.achievement-overlay {
+  position: fixed;
+  top:0; left:0;
+  width:100vw; height:100vh;
+  background: rgba(0,0,0,0.5);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background:white;
+  border-radius:10px;
+  padding:2rem;
+  max-width:500px;
+  width:90%;
+  position:relative;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {opacity:0; transform: translateY(-10px);}
+  to {opacity:1; transform: translateY(0);}
+}
+
+.btn-close {
+  position:absolute;
+  top:0.5rem;
+  right:0.5rem;
+  font-size:1.5rem;
+  border:none;
+  background:none;
+  cursor:pointer;
+}
+</style>
+{% endblock %}
